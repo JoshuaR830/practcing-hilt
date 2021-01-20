@@ -8,7 +8,6 @@ import com.joshuarichardson.dependencyinjection.Modules.DatabaseModule;
 import com.joshuarichardson.dependencyinjection.Modules.NameDao;
 import com.joshuarichardson.dependencyinjection.Modules.WellbeingDatabase;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -18,8 +17,8 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
-import androidx.test.core.app.ActivityScenario;
 import androidx.test.espresso.assertion.ViewAssertions;
+import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import dagger.Module;
 import dagger.Provides;
 import dagger.hilt.InstallIn;
@@ -32,7 +31,6 @@ import dagger.hilt.android.testing.UninstallModules;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
-import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -45,9 +43,21 @@ import static org.mockito.Mockito.when;
 @HiltAndroidTest
 @UninstallModules({AnalyticsModule.class, DatabaseModule.class})
 public class HiltDatabaseTest {
-    private HiltAndroidRule hiltRule = new HiltAndroidRule(this);
-    private ActivityScenario<MainActivity> mainActivityScenario;
 
+    // References:
+    // Multiple rules - https://developer.android.com/training/dependency-injection/hilt-testing#multiple-testrules
+    // How to chain rules and keep references to them - https://stackoverflow.com/a/27243450/13496270
+    // Rule order matters https://dagger.dev/hilt/testing.html
+    private ActivityScenarioRule<MainActivity> mainActivityScenario = new ActivityScenarioRule<>(MainActivity.class);
+    public HiltAndroidRule hiltRule = new HiltAndroidRule(this);
+
+    @Rule
+    public RuleChain chain = RuleChain.outerRule(hiltRule).around(mainActivityScenario);
+
+    // References:
+    // Replace a binding https://developer.android.com/training/dependency-injection/hilt-testing#replace-binding
+    // Finishing off the loose ends https://www.youtube.com/watch?v=nOp_CEP_EjM
+    // The Hilt docs https://dagger.dev/hilt/testing.html
     @Module
     @InstallIn(ApplicationComponent.class)
     public static class TestDatabaseModule {
@@ -59,6 +69,9 @@ public class HiltDatabaseTest {
             ArrayList<DatabaseEntity> array = new ArrayList<>();
             array.add(new DatabaseEntity(4));
 
+            // References:
+            // How to use any() - https://www.journaldev.com/21876/mockito-argument-matchers-any-eq
+            // How to use thenReturn() - https://stackoverflow.com/a/60540072/13496270
             when(nameDao.insert(any(DatabaseEntity.class))).thenReturn(0L);
             when(nameDao.getEntities()).thenReturn(array);
 
@@ -68,28 +81,21 @@ public class HiltDatabaseTest {
         }
     }
 
-    @Rule
-    public RuleChain chain = RuleChain.outerRule(hiltRule);//.around(mainActivityScenario);
-
     @Inject
     WellbeingDatabase database;
 
     @Inject
     AnalyticsService analyticsService;
 
-    @After
-    public void tearDown() {
-        mainActivityScenario.close();
-    }
-
     @Before
     public void setUp() {
+        // References
+        // Injecting everything - https://developer.android.com/training/dependency-injection/hilt-testing#testing-features
         hiltRule.inject();
     }
 
     @Test
     public void checkMockedDatabaseMocksTheDataInTheUI() {
-        mainActivityScenario = ActivityScenario.launch(MainActivity.class);
         onView(withId(R.id.textView2)).check(ViewAssertions.matches(withText("4")));
     }
 }

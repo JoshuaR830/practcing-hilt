@@ -13,12 +13,8 @@ android {
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
-        multiDexEnabled true;
 
-//        testInstrumentationRunner "com.joshuarichardson.dependencyinjection.MockTestRunner"
         testInstrumentationRunner "com.joshuarichardson.dependencyinjection.MockTestRunner"
-//        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
     }
 
     buildTypes {
@@ -38,43 +34,29 @@ android {
 }
 
 dependencies {
+    def room_version = "2.2.5"
+
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     testImplementation 'junit:junit:4.13.1'
+
+    // Android tests
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     androidTestImplementation 'androidx.test:runner:1.3.0'
-
     androidTestImplementation 'org.mockito:mockito-android:3.7.7'
-
-    def lifecycle_version = "2.2.0"
-    def room_version = "2.2.5"
-
-    // This is copied from https://dev.to/anandpushkar088/experimenting-with-dagger-hilt-3e80
-    implementation "androidx.activity:activity-ktx:1.1.0"
-
-    //ViewModel & LiveData
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+    androidTestImplementation 'androidx.test:rules:1.3.0'
+    androidTestImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
+    androidTestAnnotationProcessor "com.google.dagger:hilt-android-compiler:$hilt_version"
+    // This is the holy gradle - (what a hero -> https://youtu.be/nOp_CEP_EjM?t=126)
+    kaptAndroidTest "com.google.dagger:hilt-android-compiler:$hilt_version"
 
     // Room
     implementation "androidx.room:room-runtime:$room_version"
     kapt "androidx.room:room-compiler:$room_version"
 
-
     //Dagger - Hilt
     implementation "com.google.dagger:hilt-android:$hilt_version"
     kapt "com.google.dagger:hilt-android-compiler:$hilt_version"
-
-    androidTestImplementation 'androidx.test:rules:1.3.0'
-
-    implementation "org.mockito:mockito-core:3.7.7"
-
-    androidTestImplementation "com.google.dagger:hilt-android-testing:$hilt_version"
-    kaptAndroidTest "com.google.dagger:hilt-android-compiler:$hilt_version"
-    androidTestAnnotationProcessor "com.google.dagger:hilt-android-compiler:$hilt_version"
-
-    implementation 'com.android.support:multidex:1.0.3'
 }
